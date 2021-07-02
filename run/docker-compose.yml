@@ -3,11 +3,11 @@ services:
     haproxy:
         container_name: lb
         environment:
-            - CERTS=my.domain
-            - EMAIL=my.mail
+            - CERTS=kano.pilot.drive.sunet.dev
+            - EMAIL=kano@sunet.se
         volumes:
-            - '$PWD/data/letsencrypt:/etc/letsencrypt'
-            - '$PWD/data/haproxy.cfg:/etc/haproxy/haproxy.cfg'
+            - '$PWD/letsencrypt:/etc/letsencrypt'
+            - '$PWD/../conf/haproxy.cfg:/etc/haproxy/haproxy.cfg'
         networks:
             - lbnet
         ports:
