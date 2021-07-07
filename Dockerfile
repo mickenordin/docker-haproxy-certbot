@@ -1,15 +1,17 @@
 # start from debian 10 slim version
 FROM debian:buster-slim
+ARG LEADER_PASSWORD
 
 # install certbot, supervisor and utilities
 RUN apt-get update && apt-get install --no-install-recommends -yqq \
-    gnupg \
     apt-transport-https \
-    cron \
-    wget \
     ca-certificates \
+    cron \
     curl \
+    gettext \
+    gnupg \
     procps \
+    wget \
     && apt-get install --no-install-recommends -yqq certbot \
     && apt-get install --no-install-recommends -yqq supervisor \
     && apt-get clean autoclean && apt-get autoremove -y \
@@ -27,7 +29,9 @@ RUN apt-get update \
 # supervisord configuration
 COPY conf/supervisord.conf /etc/supervisord.conf
 # haproxy configuration
-COPY conf/haproxy.cfg /etc/haproxy/haproxy.cfg
+
+COPY conf/haproxy.cfg-template /
+RUN envsubst < /haproxy.cfg-template > /etc/haproxy/haproxy.cfg
 COPY haproxy-acme-validation-plugin/acme-http01-webroot.lua /etc/haproxy
 # renewal script
 COPY scripts/cert-renewal-haproxy.sh /

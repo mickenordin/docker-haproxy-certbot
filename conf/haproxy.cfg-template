@@ -41,9 +41,37 @@ frontend http
 frontend https
     bind *:443 ssl crt /etc/haproxy/certs/ no-sslv3 no-tls-tickets no-tlsv10 no-tlsv11
     http-response set-header Strict-Transport-Security "max-age=16000000; includeSubDomains; preload;"
-    default_backend be_kano
+    default_backend be_nextcloud
 
-backend be_kano
+# Specifies listening socket for accepting client connections using the default 
+# REDIS TCP timeout and backend be_redis TCP health check.
+frontend redis
+    bind *:6379
+    mode tcp
+    option tcplog
+    default_backend be_redis
+
+# Specifies the backend Redis proxy server TCP health settings 
+# Ensure it only forward incoming connections to reach a master.
+backend be_redis
+    mode tcp
+    option log-health-checks
+    option tcp-check
+    tcp-check connect
+    tcp-check send AUTH\ ${LEADER_PASSWORD}\r\n
+    tcp-check send PING\r\n
+    tcp-check expect string +PONG
+    tcp-check send info\ replication\r\n
+    tcp-check expect string role:master
+    tcp-check send QUIT\r\n
+    tcp-check expect string +OK
+    server cache-kano1.pilot.drive.sunet.dev cache-kano1.pilot.drive.sunet.dev:6379 check inter 1s
+    server cache-kano2.pilot.drive.sunet.dev cache-kano2.pilot.drive.sunet.dev:6379 check inter 1s
+    server cache-kano3.pilot.drive.sunet.dev cache-kano3.pilot.drive.sunet.dev:6379 check inter 1s
+
+
+backend be_nextcloud
+    mode http
     # Make sure to get correct host header
     http-send-name-header Host
     # These should be redirected according to nextcloud docs

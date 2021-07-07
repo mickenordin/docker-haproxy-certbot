@@ -2,12 +2,16 @@ version: '3'
 services:
     haproxy:
         container_name: lb
+        build:
+            context: ..
+            dockerfile: Dockerfile
+            args:
+              LEADER_PASSWORD: ${LEADER_PASSWORD}
         environment:
             - CERTS=kano.pilot.drive.sunet.dev
             - EMAIL=kano@sunet.se
         volumes:
             - '$PWD/letsencrypt:/etc/letsencrypt'
-            - '$PWD/../conf/haproxy.cfg:/etc/haproxy/haproxy.cfg'
         networks:
             - lbnet
         ports:
